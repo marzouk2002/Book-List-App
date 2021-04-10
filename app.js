@@ -17,7 +17,7 @@ class Book {
 // UI class
 class UI {
     static displayBooks() {
-        const storedBooks = []
+        const storedBooks = Store.getBooks()
         storedBooks.forEach((book)=>UI.addBookToList(book))
     }
 
@@ -40,6 +40,9 @@ class UI {
 
     static deleteBook(btn) {
         if(btn.classList.contains('delete')) {
+            let isbn = btn.parentElement.previousElementSibling.textContent
+            Store.removeBook(isbn)
+
             btn.parentElement.parentElement.remove()
         }
     }
@@ -58,6 +61,39 @@ class UI {
 }
 
 // store class
+class Store {
+    static getBooks() {
+        let books;
+        if(localStorage.getItem('books') === null) {
+            books = []
+        }else {
+            books = JSON.parse(localStorage.getItem('books'))
+        }
+        return books
+    }
+
+    static addBook(book) {
+        const books = Store.getBooks()
+
+        books.push(book)
+
+        localStorage.setItem('books', JSON.stringify(books))
+    }
+
+    static removeBook(isbn) {
+        let books = Store.getBooks()
+
+        books.forEach((book, index) => {
+            if(book.isbn === isbn) {
+              books.splice(index, 1);
+            }
+        });
+
+        console.log(books)
+
+        localStorage.setItem('books', JSON.stringify(books))
+    }
+}
 
 // event: add book
 form.addEventListener('submit', (e)=>{
@@ -72,8 +108,13 @@ form.addEventListener('submit', (e)=>{
         UI.showAlert('Please fill in all fields', 'danger')
     } else {
         const book = new Book(title, author, isbn)
+
         UI.addBookToList(book)
+
+        Store.addBook(book)
+
         UI.showAlert('Book Added', 'success')
+
         UI.clearFields()
     }
 })
@@ -84,6 +125,8 @@ document.addEventListener('DOMContentLoaded', UI.displayBooks)
 // event: remove book
 list.addEventListener('click', (e)=>{
     UI.deleteBook(e.target)
+
+    
 
     UI.showAlert('Book Removed', 'success')
 
